@@ -1,8 +1,9 @@
 
 import mongoose, {Document, Schema, Model, mongo} from "mongoose";
 import { IUser } from "../interface/user.interface";
-import { number } from "yup";
+import { number, string } from "yup";
 import { userRole } from "../enum/user.enum";
+import { strict } from "assert";
 
 const userSchema = new Schema<IUser>({
     userName: {
@@ -42,6 +43,12 @@ const userSchema = new Schema<IUser>({
         type: String,
         required:true,
         trim: true,
+    },
+    refreshToken:{
+        type :String,
+    },
+    accessToken:{
+        type : String
     }
 },{timestamps:true});
 

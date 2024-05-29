@@ -9,6 +9,8 @@ export interface IUser extends Document {
     role: 'user' | 'admin',
     address: string,
     mobileNo: string,
+    refreshToken: string,
+    accessToken: string,
 }
 
 export interface IPassenger extends IUser{}

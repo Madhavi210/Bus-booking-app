@@ -4,17 +4,23 @@ import express, {  Request, Response } from "express";
 import {  bookingModel } from "../model/index.model";
 import { bookingSchemaValidate, userSchemaValidate } from "../validate/data.validate";
 import bcrypt from 'bcrypt'
+import { generatePDF } from "../utils/pdfGenerator";
+import { transpoter } from "../utils/emailGenerator";
 
 export class BookingServiceClass {
-    createBooking = async (req:Request, res:Response) =>{
-        try {
-            await bookingSchemaValidate.validate(req.body);
-            const data = await bookingModel.create(req.body)
-            return data;
-        } catch (error:any) {
-            throw new Error(error.message)
-        }
-    }
+    // createBooking = async (req:Request, res:Response) =>{
+    //     try {
+    //         await bookingSchemaValidate.validate(req.body);
+    //         const data = await bookingModel.create(req.body)
+    //         return data;
+    //     } catch (error:any) {
+    //         throw new Error(error.message)
+    //     }
+    // }
+    isSeatAvailable = async (busId: string, seatNo: number, date: Date) => {
+        const existingBooking = await bookingModel.findOne({ busName: busId, seatNo, date });
+        return !existingBooking;
+      };
 
     getBookingById = async (req:Request, res:Response) =>{
         try {
@@ -57,7 +63,7 @@ export class BookingServiceClass {
         }
     }
 
-    deleteUserById =  async (req:Request, res:Response) =>{
+    deleteBookingById =  async (req:Request, res:Response) =>{
         try {
             const {id} = req.params;
             const data = await bookingModel.findByIdAndDelete(id);
@@ -67,7 +73,7 @@ export class BookingServiceClass {
         }
     }
 
-    deleteAllUser =  async (req:Request, res:Response) =>{
+    deleteAllBooking =  async (req:Request, res:Response) =>{
         try {
             const data = await bookingModel.deleteMany();
             return data;
@@ -76,7 +82,7 @@ export class BookingServiceClass {
         }
     }
 
-    updateUserById =   async (req:Request, res:Response) =>{
+    updateBookingById =   async (req:Request, res:Response) =>{
         try {
             const {id} = req.params;
             const {passenger, busName, seatNo, date, time } = req.body;
@@ -88,6 +94,37 @@ export class BookingServiceClass {
             return data;
         } catch (error:any) {
             throw new Error(error.message)
+        }
+    }
+
+    getBookingPdf = async(req:Request, res:Response) =>{
+        try {
+            const {userId } = req.body;
+            const data = await bookingModel.find({passenger: userId})
+            if(!data){
+                return res.status(404).json({message:'no booking to show'})
+            }
+            const doc = await generatePDF(data);
+            return doc;
+        } catch (error:any) {
+            res.status(401).json({message: error.message})
+        }
+    }
+
+    sendBookingEmail = async(req:Request, res:Response) =>{
+        try {
+            const {id} = req.params;
+            const data = bookingModel.findById(id)
+            const maillOptions = {
+                from: process.env.EMAIL_USER,
+                to: "madhavi@gmail.com",
+                subject: 'result info',
+                text:  `your booking is conformed ${data} `,
+            }
+            const info = await transpoter.sendMail(maillOptions)
+            
+        } catch (error:any) {
+            console.error(`error sending email`, error)
         }
     }
 

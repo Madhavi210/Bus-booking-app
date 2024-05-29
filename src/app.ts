@@ -4,6 +4,8 @@ import  * as dotenv from 'dotenv'
 import session, { Cookie } from 'express-session';
 import { connectDB } from './config/db.config';
 import { error } from 'console';
+import { userRouter , busRouter, bookingRouter} from './routes/index.routes';
+
 
 dotenv.config();
 
@@ -23,7 +25,9 @@ app.use(session({
 }));
 
 
-// app.use('api/v1/user', userRouter);
+app.use('api/v1/user', userRouter);
+app.use('api/v1/bus', busRouter);
+app.use('api/v1/book', bookingRouter);
 
 
 connectDB()
