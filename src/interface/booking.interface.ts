@@ -4,9 +4,11 @@ import { number } from "yup";
 import { IPassenger, IUser } from "./user.interface";
 
 export interface IBooking extends Document {
-    busName: Schema.Types.ObjectId,
+    busId: Schema.Types.ObjectId,
+    busName: string,
     passenger : Schema.Types.ObjectId | IPassenger,
     seatNo : number,
     date : Date,
     time: TimeRanges,
+    isBooked: Boolean,
 }

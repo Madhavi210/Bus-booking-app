@@ -20,26 +20,28 @@ export class BookingControllerClass {
     //     }
     // }
 
-    addBooking = async(req: Request, res: Response) =>{
+    bookSeat = async (req:Request, res:Response) =>{
         try {
-          // Validate the request body using Yup
-          await bookingSchemaValidate.validate(req.body, { abortEarly: false });
-    
-          const { busName, seatNo, date } = req.body;
-          
-          // Check if the seat is available
-          const seatAvailable = await bookingService.isSeatAvailable(busName, seatNo, date);
-          if (!seatAvailable) {
-            return res.status(400).json({ error: 'Seat is already booked for the selected date.' });
-          }
-    
-          const newBooking: IBooking = new bookingModel(req.body);
-          const savedBooking = await newBooking.save();
-          res.status(201).json(savedBooking);
+            const data = await bookingService.bookSeat(req, res);
+            const response = new apiResponse(200,  data, 'booking  successfully')
+            res.status(response.statusCode).json(response);
         } catch (error:any) {
-          res.status(500).json({ error: error.message });
+            const errorResponse = new apiError(500, 'internal server error', [error.message])
+            res.status(errorResponse.statusCode).json(errorResponse);
         }
-      }
+    }
+
+    getSeatsStatus = async (req:Request, res:Response) =>{
+        try {
+            const data = await bookingService.getSeatsStatus(req, res);
+            const response = new apiResponse(200,  data, 'available seat retrieved successfully')
+            res.status(response.statusCode).json(response);
+        } catch (error:any) {
+            const errorResponse = new apiError(500, 'internal server error', [error.message])
+            res.status(errorResponse.statusCode).json(errorResponse);
+        }
+    }
+
 
     getAllBooking = async (req:Request, res:Response) =>{
         try {

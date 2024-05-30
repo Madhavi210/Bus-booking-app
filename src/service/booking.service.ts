@@ -1,12 +1,12 @@
 
 import mongoose from "mongoose";
 import express, {  Request, Response } from "express";
-import {  bookingModel } from "../model/index.model";
+import {  bookingModel, busModel } from "../model/index.model";
 import { bookingSchemaValidate, userSchemaValidate } from "../validate/data.validate";
 import bcrypt from 'bcrypt'
 import { generatePDF } from "../utils/pdfGenerator";
 import { transpoter } from "../utils/emailGenerator";
-
+import { IBooking } from "../interface/index.interface";
 export class BookingServiceClass {
     // createBooking = async (req:Request, res:Response) =>{
     //     try {
@@ -18,9 +18,45 @@ export class BookingServiceClass {
     //     }
     // }
     isSeatAvailable = async (busId: string, seatNo: number, date: Date) => {
-        const existingBooking = await bookingModel.findOne({ busName: busId, seatNo, date });
-        return !existingBooking;
-      };
+        const existingBooking = await bookingModel.findOne({ busId, seatNo, date });
+        return !existingBooking || !existingBooking.isBooked;
+    };
+
+    bookSeat = async(req: Request, res: Response) =>{
+        try {
+          // Validate the request body using Yup
+          await bookingSchemaValidate.validate(req.body);
+    
+          const { busId, busName, seatNo, date } = req.body;
+          
+          // Check if the seat is available
+          const seatAvailable = await this.isSeatAvailable(busId, seatNo, date);
+          if (!seatAvailable) {
+            return res.status(400).json({ error: 'Seat is already booked for the selected date.' });
+          }
+          
+        //   await bookingModel.findOneAndUpdate({busId, busName, seatNo, date}, {isBooked:true}, {new:true})
+          const newBooking: IBooking = new bookingModel(req.body);
+          const savedBooking = await newBooking.save();
+          return savedBooking; 
+        } catch (error:any) {
+            throw new Error(error.message)
+        }
+      }
+
+    getSeatsStatus = async (req:Request, res:Response) => {
+        const {busId} = req.params;
+        const bus = await busModel.findById(busId);
+        if(!bus) {
+            throw new Error('Bus not found')
+        }
+        const allSeats = [...Array(bus.numberOfSeat).keys()].map(i => i + 1);
+        const booking = await bookingModel.find({busId});
+        
+        const bookedSeats = booking.filter(booking => booking.isBooked).map(booking => booking.seatNo)
+        const emptySeats = allSeats.filter(seat => !bookedSeats.includes(seat))
+        return {bookedSeats, emptySeats}
+    }
 
     getBookingById = async (req:Request, res:Response) =>{
         try {

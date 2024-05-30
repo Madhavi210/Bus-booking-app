@@ -3,10 +3,14 @@ import mongoose,{Schema, Model} from "mongoose";
 import { IBooking } from "../interface/booking.interface";
 
 const bookingSchema =  new Schema<IBooking>({
-    busName:{
+    busId:{
         type: Schema.Types.ObjectId,
         ref: 'busModel',
-        required: [true, "bus name is required"],
+        required: [true, "bus id is required"],
+    },
+    busName:{
+        type: String,
+        trim: true,
     },
     passenger : {
         type: Schema.Types.ObjectId,
@@ -27,7 +31,11 @@ const bookingSchema =  new Schema<IBooking>({
         type: TimeRanges,
         required:true,
         trim: true,
-    }
+    },
+    isBooked:{
+        type: Boolean,
+        require: true,
+    },
 },{timestamps:true})
 
 export const bookingModel: Model<IBooking> = mongoose.model('bookingModel', bookingSchema)
